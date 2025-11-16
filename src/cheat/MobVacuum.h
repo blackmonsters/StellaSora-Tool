@@ -7,6 +7,8 @@ namespace cheat::feature
 	{
 	public:
 		bool f_MobVacuum;
+		bool f_AggroOnly;
+		float f_Distance;
 
 		static MobVacuum& GetInstance();
 

@@ -14,7 +14,9 @@ namespace cheat::feature
 	}
 
 	MobVacuum::MobVacuum() : Feature(),
-		f_MobVacuum(false)
+		f_MobVacuum(false),
+		f_AggroOnly(false),
+		f_Distance(3.f)
 	{
 		global::AdventureModuleController_Update.push_back(OnUpdate);
 	}
@@ -28,14 +30,16 @@ namespace cheat::feature
 	void MobVacuum::DrawMain()
 	{
 		ImGui::Checkbox("Mob Vacuum", &f_MobVacuum);
+		ImGui::Checkbox("Aggro Only", &f_AggroOnly);
+		ImGui::DragFloat("Distance", &f_Distance, 0.1f, 1.f, 10.f, nullptr, ImGuiSliderFlags_AlwaysClamp);
 	}
 
-	static app::TSVector2 GetForwardPos(app::LogicEntity* actor, int32_t scalar)
+	static app::TSVector2 GetForwardPos(app::LogicEntity* actor, float scalar)
 	{
 		auto playerPos = app::TrueSyncTransform_get_Position(actor->fields._tsTransform_k__BackingField, nullptr);
 		auto playerForward = app::TrueSyncTransform_get_Forward(actor->fields._tsTransform_k__BackingField, nullptr);
 
-		auto convertedScale = app::FP_op_Implicit(scalar, nullptr);
+		auto convertedScale = (app::FP)(scalar * (1LL << 32));
 		auto forwardScale = app::TSVector2_op_Multiply(playerForward, convertedScale, nullptr);
 		auto forwardPos = app::TSVector2_op_Addition(playerPos, forwardScale, nullptr);
 		return forwardPos;
@@ -67,9 +71,6 @@ namespace cheat::feature
 		if (adventurePlayerController == nullptr)
 			return;
 
-		if (!adventureModuleController->fields._enterBattleStateTimes)
-			return;
-
 		auto monsterActors = TO_UNI_LIST(app::AdventureModuleController_get_monsterActors(adventureModuleController, nullptr), app::LogicEntity*);
 		if (monsterActors == nullptr)
 			return;
@@ -78,13 +79,17 @@ namespace cheat::feature
 		if (playerActor == nullptr)
 			return;
 
-		auto player = CastTo<app::LogicEntity>(playerActor, *app::LogicEntity__TypeInfo);
-		if (player == nullptr)
-			return;
-
-		auto targetPos = GetForwardPos(player, 3);
+		auto player = (app::LogicEntity*)playerActor;
+		auto targetPos = GetForwardPos(player, instance.f_Distance);
 		for (auto monster : *monsterActors)
 		{
+			auto monsterActor = CastTo<app::AdventureActor>(monster, *app::AdventureActor__TypeInfo);
+			if (monsterActor == nullptr)
+				continue;
+
+			if (instance.f_AggroOnly && monsterActor->fields._monsterTarget != player)
+				continue;
+
 			SetActorPosition(monster, targetPos);
 		}
 	}

@@ -42,8 +42,9 @@ void Run(HMODULE* phModule) {
 
 	constexpr int delayInit = 5000;
 	constexpr int delaySecInit = delayInit / 1000;
-	LOG_DEBUG("Waiting %d sec for game initialize.", delaySecInit);
+	LOG_INFO("Waiting %d sec for game initialize.", delaySecInit);
 	Sleep(delayInit);
+	LOG_INFO("Initializing...");
 
 	init_il2cpp();
 
