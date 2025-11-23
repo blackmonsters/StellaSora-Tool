@@ -11,11 +11,17 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v2
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
 
-    - name: Build with MSBuild
-      run: msbuild StellaSora-Tool.sln /p:Configuration=Release
+      - name: Build with MSBuild
+        run: msbuild StellaSora-Tool.sln /p:Configuration=Release
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: StellaSora-Build
+          path: '**/Release/*.exe'
