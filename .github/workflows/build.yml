@@ -1,27 +1,49 @@
-name: Build StellaSora
+name: Build and Release StellaSora
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    tags:
+      - "v*"        # Ex: v1.0, v1.1.3 etc.
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
 
-      - name: Build with MSBuild
+      - name: Build with MSBuild (Release x64)
         run: msbuild StellaSora-Tool.sln /p:Configuration=Release /p:Platform=x64
 
-      - name: Upload build artifacts (.dll)
+      - name: List output
+        run: dir bin\Release-x64
+
+      - name: Create ZIP with DLL and files
+        run: |
+          powershell Compress-Archive -Path bin/Release-x64/* -DestinationPath StellaSora-Tool.zip
+
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: StellaSora-DLL
-          path: '**/x64/Release/*.dll'
+          name: ReleaseFiles
+          path: |
+            bin/Release-x64/*.dll
+            StellaSora-Tool.zip
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "StellaSora Release ${{ github.ref_name }}"
+          draft: false
+          prerelease: false
+          files: |
+            bin/Release-x64/*.dll
+            StellaSora-Tool.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
