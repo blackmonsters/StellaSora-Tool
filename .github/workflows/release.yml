@@ -3,7 +3,7 @@ name: Build and Release StellaSora
 on:
   push:
     tags:
-      - "v1.0"        # Ex: v1.0, v1.1.3 etc.
+      - "v1.2"        # Ex: v1.0, v1.1.3 etc.
 
 jobs:
   build:
